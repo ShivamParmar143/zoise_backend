@@ -7,7 +7,7 @@ import cors from "cors";
 dotenv.config();
 
 const app = express.Router();
-app.use(cors());
+
 app.post('/contact', async (req, res) => {
     try {
         const { name, email,subject, message } = req.body;
