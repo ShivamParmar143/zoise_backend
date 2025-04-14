@@ -2,10 +2,12 @@ import express from "express"
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import Contact from "../models/Contact.js";
+import cors from "cors";
 
 dotenv.config();
-const app = express.Router();
 
+const app = express.Router();
+app.use(cors());
 app.post('/contact', async (req, res) => {
     try {
         const { name, email,subject, message } = req.body;
