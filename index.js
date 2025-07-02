@@ -63,7 +63,6 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Routes
 import contactroute from "./routes/contactroute.js";
 import registerroute from "./routes/registerroute.js";
 import loginroute from "./routes/loginroute.js";
@@ -72,28 +71,32 @@ import accountroute from "./routes/accountroute.js";
 dotenv.config();
 const app = express();
 
-// CORS configuration
-const corsOptions = {
-  origin: "https://zoise.vercel.app", // ✅ Frontend Vercel origin
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true, // ✅ Only if you're using cookies or auth headers
-};
+const allowedOrigin = "https://zoise.vercel.app"; // ✅ Frontend URL
 
-app.use(cors(corsOptions)); // ✅ Must come before routes
+// ✅ Manual CORS headers
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json());
 
-// Fix __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// MongoDB Connection
-const DB = process.env.MONGODB_URL;
+// ✅ MongoDB connection
 mongoose
-  .connect(DB)
+  .connect(process.env.MONGODB_URL)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("Mongo error:", err));
+  .catch((err) => console.error("Mongo error:", err));
 
-// Routes
+// ✅ Routes
 app.get("/", (req, res) => {
   res.send("Hello from Zoise backend!");
 });
@@ -103,7 +106,7 @@ app.use("/", registerroute);
 app.use("/", loginroute);
 app.use("/", accountroute);
 
-// Start Server
+// ✅ Start server (for local testing)
 app.listen(3035, () => {
   console.log("Server running on port 3035");
 });
