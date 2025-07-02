@@ -62,16 +62,18 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import serverless from "serverless-http";
 
-// Route imports
+// Import routes
 import contactroute from "../routes/contactroute.js";
 import registerroute from "../routes/registerroute.js";
 import loginroute from "../routes/loginroute.js";
 import accountroute from "../routes/accountroute.js";
 
+// Load environment variables
 dotenv.config();
+
 const app = express();
 
-// ✅ Manually add CORS headers for Vercel
+// ✅ Manually handle CORS for Vercel
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "https://zoise.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -87,30 +89,30 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// ✅ MongoDB connection
-if (!mongoose.connection.readyState) {
+// ✅ Connect MongoDB
+try {
   mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 10000
-  })
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB error:", err));
+  }).then(() => console.log("✅ MongoDB connected"));
+} catch (err) {
+  console.error("❌ MongoDB connection error:", err.message);
 }
 
-// ✅ Use routes under /api prefix
+// ✅ Health check/test route
+app.get("/api/ping", (req, res) => {
+  res.status(200).send("✅ Zoise backend is live!");
+});
+
+// ✅ Mount routes
 app.use("/api", contactroute);
 app.use("/api", registerroute);
 app.use("/api", loginroute);
 app.use("/api", accountroute);
 
-// ✅ Health check route
-app.get("/api", (req, res) => {
-  res.send("✅ Zoise backend is live!");
-});
-
-// ✅ Export for Vercel serverless
+// ✅ Export for Vercel serverless function
 export default serverless(app);
+
 
 
 
