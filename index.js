@@ -62,6 +62,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import serverless from "serverless-http"; // ✅
 
 import contactroute from "./routes/contactroute.js";
 import registerroute from "./routes/registerroute.js";
@@ -69,45 +70,49 @@ import loginroute from "./routes/loginroute.js";
 import accountroute from "./routes/accountroute.js";
 
 dotenv.config();
-
 const app = express();
-const allowedOrigin = "https://zoise.vercel.app"; // ✅ Your frontend URL
 
-// ✅ Manually set CORS headers
+const allowedOrigin = "https://zoise.vercel.app";
+
+// ✅ Set CORS headers manually
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
+
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
   next();
 });
 
+// JSON parser
 app.use(express.json());
 
-// ✅ Mongoose connection (only once during cold start in Vercel)
+// Connect to MongoDB once
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 if (!mongoose.connection.readyState) {
-  mongoose
-    .connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+  mongoose.connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
     .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error("Mongo error:", err));
+    .catch((err) => console.error("MongoDB connection error:", err));
 }
 
-// ✅ Routes
+// Routes
 app.get("/", (req, res) => {
-  res.send("Hello from Zoise backend!");
+  res.send("Zoise backend is live!");
 });
-
 app.use("/", contactroute);
 app.use("/", registerroute);
 app.use("/", loginroute);
 app.use("/", accountroute);
 
-// ✅ Export the app for serverless deployment (Vercel)
-export default app;
+// ✅ Export handler for Vercel
+export const handler = serverless(app);
+
 
