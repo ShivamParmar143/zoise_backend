@@ -61,23 +61,19 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import serverless from "serverless-http";
-import path from "path";
-import { fileURLToPath } from "url";
 
-// Import routes (adjust paths if needed)
+// Route imports
 import contactroute from "../routes/contactroute.js";
 import registerroute from "../routes/registerroute.js";
 import loginroute from "../routes/loginroute.js";
 import accountroute from "../routes/accountroute.js";
 
-// Setup env
 dotenv.config();
-
 const app = express();
 
-// ✅ Manually set CORS headers for Vercel compatibility
+// ✅ Manually add CORS headers for Vercel
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://zoise.vercel.app"); // your frontend
+  res.setHeader("Access-Control-Allow-Origin", "https://zoise.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -91,29 +87,31 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// ✅ Connect MongoDB once
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// ✅ MongoDB connection
 if (!mongoose.connection.readyState) {
-  mongoose
-    .connect(process.env.MONGODB_URL)
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error("Mongo error:", err));
+  mongoose.connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 10000
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("❌ MongoDB error:", err));
 }
 
-// ✅ Routes
+// ✅ Use routes under /api prefix
 app.use("/api", contactroute);
 app.use("/api", registerroute);
 app.use("/api", loginroute);
 app.use("/api", accountroute);
 
+// ✅ Health check route
 app.get("/api", (req, res) => {
-  res.send("Zoise backend is live!");
+  res.send("✅ Zoise backend is live!");
 });
 
-// ✅ Export for Vercel
+// ✅ Export for Vercel serverless
 export default serverless(app);
+
 
 
 
