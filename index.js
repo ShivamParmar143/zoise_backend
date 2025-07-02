@@ -69,11 +69,11 @@ import loginroute from "./routes/loginroute.js";
 import accountroute from "./routes/accountroute.js";
 
 dotenv.config();
+
 const app = express();
+const allowedOrigin = "https://zoise.vercel.app"; // ✅ Your frontend URL
 
-const allowedOrigin = "https://zoise.vercel.app"; // ✅ Frontend URL
-
-// ✅ Manual CORS headers
+// ✅ Manually set CORS headers
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -87,14 +87,16 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+// ✅ Mongoose connection (only once during cold start in Vercel)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URL)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("Mongo error:", err));
+if (!mongoose.connection.readyState) {
+  mongoose
+    .connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("MongoDB connected"))
+    .catch((err) => console.error("Mongo error:", err));
+}
 
 // ✅ Routes
 app.get("/", (req, res) => {
@@ -106,7 +108,6 @@ app.use("/", registerroute);
 app.use("/", loginroute);
 app.use("/", accountroute);
 
-// ✅ Start server (for local testing)
-app.listen(3035, () => {
-  console.log("Server running on port 3035");
-});
+// ✅ Export the app for serverless deployment (Vercel)
+export default app;
+
