@@ -60,55 +60,62 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import serverless from "serverless-http";
 import path from "path";
 import { fileURLToPath } from "url";
-import serverless from "serverless-http";
 
-import contactroute from "./routes/contactroute.js";
-import registerroute from "./routes/registerroute.js";
-import loginroute from "./routes/loginroute.js";
-import accountroute from "./routes/accountroute.js";
+// Import routes (adjust paths if needed)
+import contactroute from "../routes/contactroute.js";
+import registerroute from "../routes/registerroute.js";
+import loginroute from "../routes/loginroute.js";
+import accountroute from "../routes/accountroute.js";
 
+// Setup env
 dotenv.config();
+
 const app = express();
 
-const allowedOrigin = "https://zoise.vercel.app";
-
+// ✅ Manually set CORS headers for Vercel compatibility
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Origin", "https://zoise.vercel.app"); // your frontend
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  if (req.method === "OPTIONS") return res.sendStatus(200);
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
   next();
 });
 
 app.use(express.json());
 
+// ✅ Connect MongoDB once
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 if (!mongoose.connection.readyState) {
-  mongoose.connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("Mongo error:", err));
+  mongoose
+    .connect(process.env.MONGODB_URL)
+    .then(() => console.log("MongoDB connected"))
+    .catch((err) => console.error("Mongo error:", err));
 }
 
-app.get("/", (req, res) => {
+// ✅ Routes
+app.use("/api", contactroute);
+app.use("/api", registerroute);
+app.use("/api", loginroute);
+app.use("/api", accountroute);
+
+app.get("/api", (req, res) => {
   res.send("Zoise backend is live!");
 });
 
-app.use("/", contactroute);
-app.use("/", registerroute);
-app.use("/", loginroute);
-app.use("/", accountroute);
-
-// ✅ Correct export for Vercel
+// ✅ Export for Vercel
 export default serverless(app);
+
+
 
 
 
