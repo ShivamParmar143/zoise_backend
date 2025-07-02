@@ -14,11 +14,17 @@ import accountroute from "./routes/accountroute.js"
 dotenv.config();
 const app = express();
 
-const allowedOrigins = ['https://zoise.vercel.app'];
+const allowedOrigins = ['http://localhost:3000', 'https://zoise.vercel.app'];
 
 const corsOptions = {
-  origin: allowedOrigins,
-  credentials: true, // if using cookies or sessions
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
