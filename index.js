@@ -5,11 +5,25 @@ import dotenv from "dotenv";
 import path from "path";  // Ensure this is the path module
 import { fileURLToPath } from "url";
 import contactroute from "./routes/contactroute.js"
+import registerroute from "./routes/registerroute.js"
+import loginroute from "./routes/loginroute.js"
+import accountroute from "./routes/accountroute.js"
+
+
 
 dotenv.config();
 const app = express();
+
+const allowedOrigins = ['https://zoise.vercel.app'];
+
+const corsOptions = {
+  origin: allowedOrigins,
+  credentials: true, // if using cookies or sessions
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cors())
+// app.use(cors())
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +40,9 @@ app.get('/', (req, res) => {
 })
 
 app.use('/', contactroute)
+app.use('/', registerroute)
+app.use('/',loginroute)
+app.use('/',accountroute)
 
 
 
