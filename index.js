@@ -62,7 +62,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import serverless from "serverless-http"; // ✅
+import serverless from "serverless-http";
 
 import contactroute from "./routes/contactroute.js";
 import registerroute from "./routes/registerroute.js";
@@ -74,23 +74,18 @@ const app = express();
 
 const allowedOrigin = "https://zoise.vercel.app";
 
-// ✅ Set CORS headers manually
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+  if (req.method === "OPTIONS") return res.sendStatus(200);
   next();
 });
 
-// JSON parser
 app.use(express.json());
 
-// Connect to MongoDB once
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -99,20 +94,22 @@ if (!mongoose.connection.readyState) {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("Mongo error:", err));
 }
 
-// Routes
 app.get("/", (req, res) => {
   res.send("Zoise backend is live!");
 });
+
 app.use("/", contactroute);
 app.use("/", registerroute);
 app.use("/", loginroute);
 app.use("/", accountroute);
 
-// ✅ Export handler for Vercel
-export const handler = serverless(app);
+// ✅ Correct export for Vercel
+export default serverless(app);
+
+
 
 
