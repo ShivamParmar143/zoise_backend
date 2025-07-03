@@ -60,58 +60,50 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import serverless from "serverless-http";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Import routes
 import contactroute from "../routes/contactroute.js";
 import registerroute from "../routes/registerroute.js";
 import loginroute from "../routes/loginroute.js";
 import accountroute from "../routes/accountroute.js";
 
-// Load environment variables
 dotenv.config();
-
 const app = express();
 
-// ✅ Manually handle CORS for Vercel
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://zoise.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+// ✅ CORS middleware
+app.use(cors({
+  origin: "https://zoise.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
 
-  next();
-});
-
+// ✅ Middleware
 app.use(express.json());
 
-// ✅ Connect MongoDB
-try {
-  mongoose.connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }).then(() => console.log("✅ MongoDB connected"));
-} catch (err) {
-  console.error("❌ MongoDB connection error:", err.message);
-}
+// ✅ MongoDB connection
+mongoose.connect(process.env.MONGODB_URL)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB error:", err));
 
-// ✅ Health check/test route
-app.get("/api/ping", (req, res) => {
-  res.status(200).send("✅ Zoise backend is live!");
-});
-
-// ✅ Mount routes
+// ✅ Routes
+app.get("/api/ping", (req, res) => res.send("✅ Zoise backend is live"));
 app.use("/api", contactroute);
 app.use("/api", registerroute);
 app.use("/api", loginroute);
 app.use("/api", accountroute);
 
-// ✅ Export for Vercel serverless function
-export default serverless(app);
+// ✅ Start the server only if not running in serverless
+if (process.env.NODE_ENV !== "production") {
+  app.listen(3035, () => console.log("🚀 Server running on http://localhost:3035"));
+}
+
+// ✅ Export for Vercel
+export default app;
+
 
 
 
