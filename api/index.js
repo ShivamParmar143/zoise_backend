@@ -60,6 +60,7 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import serverless from "serverless-http";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -69,36 +70,52 @@ import loginroute from "../routes/loginroute.js";
 import accountroute from "../routes/accountroute.js";
 
 dotenv.config();
+
 const app = express();
 
-app.use(cors());
+// ✅ Allow both frontend (production) and local dev
+const allowedOrigins = ["https://zoise.vercel.app", "http://localhost:3000"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
-// MongoDB
+// ✅ MongoDB Connection
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 if (!mongoose.connection.readyState) {
-  mongoose.connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  }).then(() => console.log("✅ MongoDB connected"))
-    .catch(err => console.error("Mongo error:", err));
+  mongoose
+    .connect(process.env.MONGODB_URL)
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch((err) => console.error("❌ Mongo error:", err));
 }
 
-// Routes
+// ✅ API Routes
 app.use("/api", contactroute);
 app.use("/api", registerroute);
 app.use("/api", loginroute);
 app.use("/api", accountroute);
 
-// Default route for root
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.send("✅ Zoise backend is running");
 });
 
-// Export for Vercel
-export default app;
+// ✅ Vercel Export
+export default serverless(app);
+
+
 
 
 
