@@ -60,9 +60,6 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import serverless from "serverless-http";
-import path from "path";
-import { fileURLToPath } from "url";
 
 import contactroute from "../routes/contactroute.js";
 import registerroute from "../routes/registerroute.js";
@@ -70,50 +67,37 @@ import loginroute from "../routes/loginroute.js";
 import accountroute from "../routes/accountroute.js";
 
 dotenv.config();
-
 const app = express();
 
-// ✅ Allow both frontend (production) and local dev
-const allowedOrigins = ["https://zoise.vercel.app", "http://localhost:3000"];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+// ✅ CORS setup for Vercel + local
+app.use(cors({
+  origin: ["http://localhost:3000", "https://zoise.vercel.app"],
+  credentials: true,
+}));
 
 app.use(express.json());
 
-// ✅ MongoDB Connection
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// ✅ MongoDB connection
+mongoose
+  .connect(process.env.MONGODB_URL)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("❌ MongoDB error:", err));
 
-if (!mongoose.connection.readyState) {
-  mongoose
-    .connect(process.env.MONGODB_URL)
-    .then(() => console.log("✅ MongoDB connected"))
-    .catch((err) => console.error("❌ Mongo error:", err));
-}
-
-// ✅ API Routes
+// ✅ Routes
+app.get("/api/ping", (req, res) => res.send("✅ Zoise backend is live!"));
 app.use("/api", contactroute);
 app.use("/api", registerroute);
 app.use("/api", loginroute);
 app.use("/api", accountroute);
 
-app.get("/api", (req, res) => {
-  res.send("✅ Zoise backend is running");
+// ✅ Start Express server
+const PORT = process.env.PORT || 3035;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
 
-// ✅ Vercel Export
-export default serverless(app);
+
+
 
 
 
