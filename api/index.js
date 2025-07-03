@@ -71,38 +71,35 @@ import accountroute from "../routes/accountroute.js";
 dotenv.config();
 const app = express();
 
+app.use(cors());
+app.use(express.json());
+
+// MongoDB
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ CORS middleware
-app.use(cors({
-  origin: "https://zoise.vercel.app",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-}));
+if (!mongoose.connection.readyState) {
+  mongoose.connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }).then(() => console.log("✅ MongoDB connected"))
+    .catch(err => console.error("Mongo error:", err));
+}
 
-// ✅ Middleware
-app.use(express.json());
-
-// ✅ MongoDB connection
-mongoose.connect(process.env.MONGODB_URL)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
-
-// ✅ Routes
-app.get("/api/ping", (req, res) => res.send("✅ Zoise backend is live"));
+// Routes
 app.use("/api", contactroute);
 app.use("/api", registerroute);
 app.use("/api", loginroute);
 app.use("/api", accountroute);
 
-// ✅ Start the server only if not running in serverless
-if (process.env.NODE_ENV !== "production") {
-  app.listen(3035, () => console.log("🚀 Server running on http://localhost:3035"));
-}
+// Default route for root
+app.get("/", (req, res) => {
+  res.send("✅ Zoise backend is running");
+});
 
-// ✅ Export for Vercel
+// Export for Vercel
 export default app;
+
 
 
 
