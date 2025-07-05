@@ -69,32 +69,33 @@ import accountroute from "../routes/accountroute.js";
 dotenv.config();
 const app = express();
 
-// ✅ CORS setup for Vercel + local
+// CORS setup
 app.use(cors({
   origin: ["http://localhost:3000", "https://zoise.vercel.app"],
-  credentials: true,
+  credentials: true
 }));
 
 app.use(express.json());
 
-// ✅ MongoDB connection
+// MongoDB Connection
 mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB error:", err));
 
-// ✅ Routes
+// Routes
 app.get("/api/ping", (req, res) => res.send("✅ Zoise backend is live!"));
 app.use("/api", contactroute);
 app.use("/api", registerroute);
 app.use("/api", loginroute);
 app.use("/api", accountroute);
 
-// ✅ Start Express server
+// Start Server
 const PORT = process.env.PORT || 3035;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
 
 
 
